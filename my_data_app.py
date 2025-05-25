@@ -205,47 +205,43 @@ if menu == "🖼️ 이미지 용량 줄이기":
     st.caption(f"🔧 현재 선택된 압축률: {compression_quality}%")
     st.caption("※ 숫자가 낮을수록 이미지 크기가 작아집니다 (화질도 함께 낮아짐)")
 
-    # 이전 업로드 상태 초기화
-    if "last_uploaded_names" not in st.session_state:
-        st.session_state.last_uploaded_names = []
+# 업로드 상태를 세션에 저장
+if "uploaded_files" not in st.session_state:
+    st.session_state.uploaded_files = []
 
-    # 업로드 입력
-    uploaded_files = st.file_uploader(
-        "📂 이미지를 드래그 앤 드롭 하세요 (PNG, JPG, JPEG)",
-        type=["png", "jpg", "jpeg"],
-        accept_multiple_files=True
-    )
+# 파일 업로드
+new_files = st.file_uploader(
+    "📂 이미지를 드래그 앤 드롭 하세요 (PNG, JPG, JPEG)",
+    type=["png", "jpg", "jpeg"],
+    accept_multiple_files=True,
+    key="uploader"
+)
 
-    # 새로 업로드했는지 비교 (파일 이름 기준)
-    if uploaded_files:
-        current_names = [f.name for f in uploaded_files]
-        if current_names != st.session_state.last_uploaded_names:
-            st.session_state.last_uploaded_names = current_names  # 새로 덮어씀
-        else:
-            uploaded_files = []  # 중복된 경우 무시
+# 새 업로드 발생 시 기존 목록 초기화
+if new_files:
+    st.session_state.uploaded_files = new_files
 
-    # 이전 상태 무조건 초기화: 업로드되면 이전 세션 상태 제거
-    if uploaded_files:
-        st.session_state.compressed_files = []  # 이전 결과 초기화
+# 파일 목록 표시
+if st.session_state.uploaded_files:
+    st.subheader("📋 업로드된 파일 목록")
+    for file in st.session_state.uploaded_files:
+        st.markdown(f"- {file.name}")
 
+# 저장 및 다운로드 버튼
+if st.session_state.uploaded_files:
+    if st.button("💾 저장 및 다운로드"):
         compressed_files = []
-        for file in uploaded_files:
+        for file in st.session_state.uploaded_files:
             image = Image.open(file)
             if image.mode in ("RGBA", "P"):
                 image = image.convert("RGB")
-
             buffer = io.BytesIO()
             image.save(buffer, format="JPEG", quality=compression_quality)
             buffer.seek(0)
             compressed_files.append((file.name, buffer))
 
-        st.session_state.compressed_files = compressed_files
         st.success(f"{len(compressed_files)}개의 이미지가 {compression_quality}% 품질로 압축되었습니다.")
-    else:
-        compressed_files = st.session_state.get("compressed_files", [])
 
-    # 다운로드 버튼
-    if compressed_files:
         if len(compressed_files) == 1:
             name, buf = compressed_files[0]
             st.download_button(
