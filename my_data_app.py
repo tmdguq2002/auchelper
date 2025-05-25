@@ -183,20 +183,31 @@ if menu == "📂 로바스 시각화":
 
 if menu == "🖼️ 이미지 용량 줄이기":
     # 압축률 선택
+    if "quality" not in st.session_state:
+        st.session_state.quality = 60  # 기본값
 
-    st.subheader("📉 압축률 선택")
-    left, center, right = st.columns([1, 3, 1])
+    # 버튼 가운데 정렬 + 넓게 만들기
+    col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
 
-    with center:
-        compression_quality = st.radio(
-            label="",
-            options=[20, 40, 60, 80],
-            index=2,  # 기본 선택: 60%
-            horizontal=True
-        )
+    with col1:
+        if st.button("20%", use_container_width=True):
+            st.session_state.quality = 20
+    with col2:
+        if st.button("40%", use_container_width=True):
+            st.session_state.quality = 40
+    with col3:
+        if st.button("60%", use_container_width=True):
+            st.session_state.quality = 60
+    with col4:
+        if st.button("80%", use_container_width=True):
+            st.session_state.quality = 80
 
-    compression_quality = st.session_state.quality
-    st.caption(f"🔧 현재 선택된 압축률: {compression_quality}%")
+    # 선택된 버튼 강조해서 시각적으로 보여주기
+    selected = st.session_state.quality
+    st.markdown(
+        f"<div style='text-align:center; font-weight:bold; font-size:18px;'>🔧 현재 선택된 압축률: <span style='color:#ff4b4b'>{selected}%</span></div>",
+        unsafe_allow_html=True
+    )
     st.caption("※ 숫자가 낮을수록 이미지 크기가 작아집니다 (화질도 함께 낮아짐)")
 
 # 업로드 상태를 세션에 저장
