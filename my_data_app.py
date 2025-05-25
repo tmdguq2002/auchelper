@@ -5,12 +5,16 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import io
+import zipfile
+
 sns.set_theme(style='whitegrid', font_scale=1.5)
 sns.set_palette('Set2', n_colors=10)
 plt.rc('font', family='AppleGothic')
 plt.rc('axes', unicode_minus=False)
 
 import streamlit as st
+from PIL import Image
 from datetime import date
 
 df = pd.read_csv('data/trans_raw.csv', encoding='euc-kr')
@@ -35,7 +39,7 @@ with col2:
 st.sidebar.title("기능 선택")
 menu = st.sidebar.radio(
     "원하는 기능을 선택하세요",
-    ("📂 로바스 시각화", "📊 매출 시각화", "📈 Top5 분석", "👥 고객 분석")
+    ("📂 로바스 시각화", "🖼 이미지 용량 줄이기", "📈 Top5 분석", "👥 고객 분석")
 )
 
 my_df = df
@@ -66,7 +70,7 @@ my_df = my_df[my_df.상품중분류명.isin(option03)]
 
 if menu == "📂 로바스 시각화":
     st.header("📂 로바스 자료 업로드")
-    st.caption("로바스에서 지출/어디어디/어디어디 엑셀로 자료를 다운받으신 후 업로드 해주세요")
+    st.caption("★로바스에서 지출/어디어디/어디어디 엑셀로 자료를 다운받으신 후 업로드 해주세요")
     uploaded_file = st.file_uploader("엑셀 또는 CSV 파일 업로드", type=["xlsx", "xls", "csv"])
 
     if uploaded_file is not None:
@@ -84,6 +88,57 @@ if menu == "📂 로바스 시각화":
         except Exception as e:
             st.error(f"파일을 읽는 중 오류 발생: {e}")
 
+if menu == "🖼 이미지 용량 줄이기":
+    # 압축률 선택
+    quality = st.selectbox("압축률 선택 (%)", [80, 60, 40, 20])
+    st.caption("※ 숫자가 낮을수록 이미지 크기가 작아집니다 (화질도 함께 낮아짐)")
+
+    # 파일 업로드 (다중 허용)
+    uploaded_files = st.file_uploader(
+        "📂 이미지 파일을 드래그 앤 드롭 하세요 (PNG, JPG, JPEG)", 
+        type=["png", "jpg", "jpeg"],
+        accept_multiple_files=True
+    )
+
+    # 압축 처리
+    compressed_files = []
+
+    if uploaded_files:
+        for file in uploaded_files:
+            image = Image.open(file)
+
+            # JPEG 저장을 위해 RGB 변환
+            if image.mode in ("RGBA", "P"):
+                image = image.convert("RGB")
+
+            buffer = io.BytesIO()
+            image.save(buffer, format="JPEG", quality=quality)
+            buffer.seek(0)
+            compressed_files.append((file.name, buffer))
+
+        st.success(f"{len(compressed_files)}개의 이미지가 압축되었습니다.")
+
+        # 다운로드 버튼
+        if len(compressed_files) == 1:
+            name, buf = compressed_files[0]
+            st.download_button(
+                label="📥 압축된 이미지 다운로드",
+                data=buf,
+                file_name=f"compressed_{name}",
+                mime="image/jpeg"
+            )
+        else:
+            zip_io = io.BytesIO()
+            with zipfile.ZipFile(zip_io, "w") as zf:
+                for name, buf in compressed_files:
+                    zf.writestr(f"compressed_{name}", buf.getvalue())
+            zip_io.seek(0)
+            st.download_button(
+                label="📦 ZIP으로 다운로드",
+                data=zip_io,
+                file_name="compressed_images.zip",
+                mime="application/zip"
+            )
 
 col1, col2, col3 = st.columns(3)
 col1.metric(label = "평균 판매액(단위:만원)", value = round(my_df['구매금액'].mean() / 10000,3), 
