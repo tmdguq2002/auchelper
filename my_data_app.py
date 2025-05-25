@@ -43,28 +43,30 @@ menu = st.sidebar.radio(
 )
 
 my_df = df
-st.sidebar.title("사이드 바 제목")
-st.sidebar.header("사이드 바 소제목")
-col1, col2 = st.sidebar.columns(2)
-with col1:
-    start_date = st.date_input("시작일시", date(2021, 1, 1),
-                                       min_value=date(2021,1,1),
-                                       max_value=date(2021,12,30))
-with col2:
-    end_date = st.date_input("종료일시", date(2021, 12, 31),
-                                     min_value=date(2021,1,2),
-                                     max_value=date(2021,12,31))
-my_df = my_df[my_df['구매일자'].dt.date.between(start_date, end_date)]
 
-option01 = st.sidebar.checkbox('취소거래제외', value=False)
-if option01:
-    my_df = my_df[my_df['취소여부']!=1]
-    
-st.sidebar.header('상품분류선택')
-option02 = st.sidebar.multiselect('상품대분류', (my_df.상품대분류명.unique()), default=(my_df.상품대분류명.unique()))
-my_df = my_df[my_df.상품대분류명.isin(option02)]
-option03 = st.sidebar.multiselect('상품중분류', (my_df.상품중분류명.unique()), default=(my_df.상품중분류명.unique()))
-my_df = my_df[my_df.상품중분류명.isin(option03)]
+if menu == "📂 로바스 시각화":
+    st.sidebar.title("사이드 바 제목")
+    st.sidebar.header("사이드 바 소제목")
+    col1, col2 = st.sidebar.columns(2)
+    with col1:
+        start_date = st.date_input("시작일시", date(2021, 1, 1),
+                                        min_value=date(2021,1,1),
+                                        max_value=date(2021,12,30))
+    with col2:
+        end_date = st.date_input("종료일시", date(2021, 12, 31),
+                                        min_value=date(2021,1,2),
+                                        max_value=date(2021,12,31))
+    my_df = my_df[my_df['구매일자'].dt.date.between(start_date, end_date)]
+
+    option01 = st.sidebar.checkbox('취소거래제외', value=False)
+    if option01:
+        my_df = my_df[my_df['취소여부']!=1]
+        
+    st.sidebar.header('상품분류선택')
+    option02 = st.sidebar.multiselect('상품대분류', (my_df.상품대분류명.unique()), default=(my_df.상품대분류명.unique()))
+    my_df = my_df[my_df.상품대분류명.isin(option02)]
+    option03 = st.sidebar.multiselect('상품중분류', (my_df.상품중분류명.unique()), default=(my_df.상품중분류명.unique()))
+    my_df = my_df[my_df.상품중분류명.isin(option03)]
 
 ##################메인##################
 
@@ -191,19 +193,16 @@ if menu == "🖼️ 이미지 용량 줄이기":
     with col1:
         if st.button("20%"):
             st.session_state.quality = 20
-            horizontal=True
+            use_container_width = 20
     with col2:
         if st.button("40%"):
             st.session_state.quality = 40
-            horizontal=True
     with col3:
         if st.button("60%"):
             st.session_state.quality = 60
-            horizontal=True
     with col4:
         if st.button("80%"):
             st.session_state.quality = 80
-            horizontal=True
 
     compression_quality = st.session_state.quality
     st.caption(f"🔧 현재 선택된 압축률: {compression_quality}%")
