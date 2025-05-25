@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[5]:
-
-
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -16,42 +13,34 @@ plt.rc('axes', unicode_minus=False)
 import streamlit as st
 from datetime import date
 
-
-# In[6]:
-
-
 df = pd.read_csv('data/trans_raw.csv', encoding='euc-kr')
 lat = pd.read_csv('data/lat.csv', encoding='euc-kr')
 df['구매일자'] = pd.to_datetime(df['구매일자'])
 
-
-# In[ ]:
-
-
-df.head()
-
-
-# In[ ]:
-
-
 st.set_page_config(page_title='Transaction Dashboard', 
-                   page_icon='🐋', layout='wide')
-st.title("Data App Dashboard")
+                   page_icon='🐔', layout='wide')
 
+col1, col2 = st.columns([1, 4])
+with col1:
+    st.image("image/logo.PNG", width=150) #auc 로고
+with col2:
+    st.markdown(
+        """
+        <h1 style="margin-top: -12px;">안양도시공사 <strong>HELPER</strong></h1>
+        """,
+        unsafe_allow_html=True
+    )
 
-# In[ ]:
-
-
-if st.button('새로고침'):
-    st.experimental_rerun()
-
-
-# In[ ]:
-
+##################사이드바##################
+st.sidebar.title("기능 선택")
+menu = st.sidebar.radio(
+    "원하는 기능을 선택하세요",
+    ("📂 로바스 시각화", "📊 매출 시각화", "📈 Top5 분석", "👥 고객 분석")
+)
 
 my_df = df
-st.sidebar.title("조건 필터")
-st.sidebar.header("날짜 조건")
+st.sidebar.title("사이드 바 제목")
+st.sidebar.header("사이드 바 소제목")
 col1, col2 = st.sidebar.columns(2)
 with col1:
     start_date = st.date_input("시작일시", date(2021, 1, 1),
@@ -73,11 +62,27 @@ my_df = my_df[my_df.상품대분류명.isin(option02)]
 option03 = st.sidebar.multiselect('상품중분류', (my_df.상품중분류명.unique()), default=(my_df.상품중분류명.unique()))
 my_df = my_df[my_df.상품중분류명.isin(option03)]
 
+##################메인##################
 
-# In[ ]:
+if menu == "📂 로바스 시각화":
+    st.header("📂 회계 자료 업로드")
+    uploaded_file = st.file_uploader("엑셀 또는 CSV 파일 업로드", type=["xlsx", "xls", "csv"])
 
+    if uploaded_file is not None:
+        try:
+            if uploaded_file.name.endswith(".csv"):
+                try:
+                    df_uploaded = pd.read_csv(uploaded_file, encoding='utf-8')
+                except:
+                    df_uploaded = pd.read_csv(uploaded_file, encoding='euc-kr')
+            else:
+                df_uploaded = pd.read_excel(uploaded_file)
 
-st.header('0. Overview')
+            st.success("파일 업로드 완료 ✅")
+            st.dataframe(df_uploaded.head())
+        except Exception as e:
+            st.error(f"파일을 읽는 중 오류 발생: {e}")
+
 
 col1, col2, col3 = st.columns(3)
 col1.metric(label = "평균 판매액(단위:만원)", value = round(my_df['구매금액'].mean() / 10000,3), 
