@@ -205,19 +205,28 @@ if menu == "🖼️ 이미지 용량 줄이기":
     st.caption(f"🔧 현재 선택된 압축률: {compression_quality}%")
     st.caption("※ 숫자가 낮을수록 이미지 크기가 작아집니다 (화질도 함께 낮아짐)")
 
-    # 파일 업로드 (다중 허용)
-    st.subheader("📂 이미지 업로드")
+    # 이전 업로드 상태 초기화
+    if "last_uploaded_names" not in st.session_state:
+        st.session_state.last_uploaded_names = []
+
+    # 업로드 입력
     uploaded_files = st.file_uploader(
-        "📂 이미지 파일을 드래그 앤 드롭 하세요 (PNG, JPG, JPEG)", 
+        "📂 이미지를 드래그 앤 드롭 하세요 (PNG, JPG, JPEG)",
         type=["png", "jpg", "jpeg"],
-        accept_multiple_files=True,
-        key="uploader"
+        accept_multiple_files=True
     )
+
+    # 새로 업로드했는지 비교 (파일 이름 기준)
+    if uploaded_files:
+        current_names = [f.name for f in uploaded_files]
+        if current_names != st.session_state.last_uploaded_names:
+            st.session_state.last_uploaded_names = current_names  # 새로 덮어씀
+        else:
+            uploaded_files = []  # 중복된 경우 무시
 
     # 압축 처리
     if uploaded_files:
         compressed_files = []
-
         for file in uploaded_files:
             image = Image.open(file)
             if image.mode in ("RGBA", "P"):
@@ -230,7 +239,6 @@ if menu == "🖼️ 이미지 용량 줄이기":
 
         st.success(f"{len(compressed_files)}개의 이미지가 {compression_quality}% 품질로 압축되었습니다.")
 
-        # 단일 파일이면 직접 다운로드
         if len(compressed_files) == 1:
             name, buf = compressed_files[0]
             st.download_button(
@@ -240,17 +248,14 @@ if menu == "🖼️ 이미지 용량 줄이기":
                 mime="image/jpeg"
             )
         else:
-            # 여러 파일이면 ZIP 압축
-            zip_buffer = io.BytesIO()
-            with zipfile.ZipFile(zip_buffer, "w") as zip_file:
+            zip_io = io.BytesIO()
+            with zipfile.ZipFile(zip_io, "w") as zf:
                 for name, buf in compressed_files:
-                    zip_file.writestr(f"compressed_{name}", buf.getvalue())
-            zip_buffer.seek(0)
-
+                    zf.writestr(f"compressed_{name}", buf.getvalue())
+            zip_io.seek(0)
             st.download_button(
                 label="📦 ZIP으로 다운로드",
-                data=zip_buffer,
+                data=zip_io,
                 file_name="compressed_images.zip",
                 mime="application/zip"
             )
-
