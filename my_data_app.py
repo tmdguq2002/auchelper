@@ -186,20 +186,24 @@ if menu == "🖼️ 이미지 용량 줄이기":
     col1, col2, col3, col4 = st.columns(4)
 
     if "quality" not in st.session_state:
-        st.session_state.quality = 80
+        st.session_state.quality = 60
 
     with col1:
         if st.button("20%"):
             st.session_state.quality = 20
+            horizontal=True
     with col2:
         if st.button("40%"):
             st.session_state.quality = 40
+            horizontal=True
     with col3:
         if st.button("60%"):
             st.session_state.quality = 60
+            horizontal=True
     with col4:
         if st.button("80%"):
             st.session_state.quality = 80
+            horizontal=True
 
     compression_quality = st.session_state.quality
     st.caption(f"🔧 현재 선택된 압축률: {compression_quality}%")
@@ -220,12 +224,6 @@ new_files = st.file_uploader(
 # 새 업로드 발생 시 기존 목록 초기화
 if new_files:
     st.session_state.uploaded_files = new_files
-
-# 파일 목록 표시
-if st.session_state.uploaded_files:
-    st.subheader("📋 업로드된 파일 목록")
-    for file in st.session_state.uploaded_files:
-        st.markdown(f"- {file.name}")
 
 # 저장 및 다운로드 버튼
 if st.session_state.uploaded_files:
