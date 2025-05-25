@@ -66,7 +66,7 @@ my_df = my_df[my_df.상품중분류명.isin(option03)]
 
 if menu == "📂 로바스 시각화":
     st.header("📂 로바스 자료 업로드")
-    st.subheader("로바스에서 지출/어디어디/어디어디 엑셀로 자료를 다운받으신 후 업로드 해주세요")
+    st.caption("로바스에서 지출/어디어디/어디어디 엑셀로 자료를 다운받으신 후 업로드 해주세요")
     uploaded_file = st.file_uploader("엑셀 또는 CSV 파일 업로드", type=["xlsx", "xls", "csv"])
 
     if uploaded_file is not None:
