@@ -203,7 +203,7 @@ if menu == "🖼️ 이미지 용량 줄이기":
             st.session_state.quality = 80
 
     # 선택된 버튼 강조해서 시각적으로 보여주기
-    selected = st.session_state.quality
+    compression_quality = st.session_state.quality
     st.markdown(
         f"<div style='text-align:center; font-weight:bold; font-size:18px;'>🔧 현재 선택된 압축률: <span style='color:#ff4b4b'>{selected}%</span></div>",
         unsafe_allow_html=True
