@@ -196,7 +196,7 @@ if menu == "🖼️ 이미지 용량 줄이기":
         if st.button("40%", use_container_width=True):
             st.session_state.quality = 40
     with col3:
-        if st.button("60%", use_container_width=True, on_click=60):
+        if st.button("60%", use_container_width=True):
             st.session_state.quality = 60
     with col4:
         if st.button("80%", use_container_width=True):
