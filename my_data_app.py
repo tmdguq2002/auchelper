@@ -224,8 +224,10 @@ if menu == "🖼️ 이미지 용량 줄이기":
         else:
             uploaded_files = []  # 중복된 경우 무시
 
-    # 압축 처리
+    # 이전 상태 무조건 초기화: 업로드되면 이전 세션 상태 제거
     if uploaded_files:
+        st.session_state.compressed_files = []  # 이전 결과 초기화
+
         compressed_files = []
         for file in uploaded_files:
             image = Image.open(file)
@@ -237,8 +239,13 @@ if menu == "🖼️ 이미지 용량 줄이기":
             buffer.seek(0)
             compressed_files.append((file.name, buffer))
 
+        st.session_state.compressed_files = compressed_files
         st.success(f"{len(compressed_files)}개의 이미지가 {compression_quality}% 품질로 압축되었습니다.")
+    else:
+        compressed_files = st.session_state.get("compressed_files", [])
 
+    # 다운로드 버튼
+    if compressed_files:
         if len(compressed_files) == 1:
             name, buf = compressed_files[0]
             st.download_button(
