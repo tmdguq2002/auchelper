@@ -88,58 +88,6 @@ if menu == "📂 로바스 시각화":
         except Exception as e:
             st.error(f"파일을 읽는 중 오류 발생: {e}")
 
-if menu == "🖼 이미지 용량 줄이기":
-    # 압축률 선택
-    quality = st.selectbox("압축률 선택 (%)", [80, 60, 40, 20])
-    st.caption("※ 숫자가 낮을수록 이미지 크기가 작아집니다 (화질도 함께 낮아짐)")
-
-    # 파일 업로드 (다중 허용)
-    uploaded_files = st.file_uploader(
-        "📂 이미지 파일을 드래그 앤 드롭 하세요 (PNG, JPG, JPEG)", 
-        type=["png", "jpg", "jpeg"],
-        accept_multiple_files=True
-    )
-
-    # 압축 처리
-    compressed_files = []
-
-    if uploaded_files:
-        for file in uploaded_files:
-            image = Image.open(file)
-
-            # JPEG 저장을 위해 RGB 변환
-            if image.mode in ("RGBA", "P"):
-                image = image.convert("RGB")
-
-            buffer = io.BytesIO()
-            image.save(buffer, format="JPEG", quality=quality)
-            buffer.seek(0)
-            compressed_files.append((file.name, buffer))
-
-        st.success(f"{len(compressed_files)}개의 이미지가 압축되었습니다.")
-
-        # 다운로드 버튼
-        if len(compressed_files) == 1:
-            name, buf = compressed_files[0]
-            st.download_button(
-                label="📥 압축된 이미지 다운로드",
-                data=buf,
-                file_name=f"compressed_{name}",
-                mime="image/jpeg"
-            )
-        else:
-            zip_io = io.BytesIO()
-            with zipfile.ZipFile(zip_io, "w") as zf:
-                for name, buf in compressed_files:
-                    zf.writestr(f"compressed_{name}", buf.getvalue())
-            zip_io.seek(0)
-            st.download_button(
-                label="📦 ZIP으로 다운로드",
-                data=zip_io,
-                file_name="compressed_images.zip",
-                mime="application/zip"
-            )
-
 col1, col2, col3 = st.columns(3)
 col1.metric(label = "평균 판매액(단위:만원)", value = round(my_df['구매금액'].mean() / 10000,3), 
             delta=round(my_df['구매금액'].mean() / 10000 - df['구매금액'].mean() / 10000, 3))
@@ -147,9 +95,6 @@ col2.metric(label = "구매 고객수", value = my_df['ID'].nunique(),
             delta=my_df['ID'].nunique() - df['ID'].nunique())
 col3.metric(label = "고객 평균 연령", value = round(my_df.groupby('ID')['연령'].mean().mean(),3),
             delta = round(my_df.groupby('ID')['연령'].mean().mean() - df.groupby('ID')['연령'].mean().mean(),3))
-
-
-# In[ ]:
 
 
 st.header('1. 매출현황분석')
@@ -160,9 +105,6 @@ whole_values = my_df.groupby(time_frame)[['구매금액']].sum()
 whole_values.index.name = 'index'
 st.download_button('Download',whole_values.to_csv(encoding='euc-kr'), '매출현황분석.csv')
 st.area_chart(whole_values, use_container_width=True)
-
-
-# In[ ]:
 
 
 st.subheader('지역별 비교')
@@ -188,10 +130,6 @@ city_values.columns = list(city_values.columns)
 
 st.line_chart(city_values, use_container_width=True)
 
-
-# In[ ]:
-
-
 st.subheader('Top5 비교')
 
 def top5(col_name, top=5):
@@ -214,13 +152,7 @@ with col3:
     st.pyplot(top5('상품중분류명'))
 
 
-# In[ ]:
-
-
 st.header('2. 고객현황분석')
-
-
-# In[ ]:
 
 
 st.subheader('성별 현황')
@@ -228,9 +160,6 @@ st.write('성별 구매건수')
 gender_count = my_df.groupby([time_frame, '성별'])['구매수량'].sum().unstack()
 gender_count.columns = ['남성','여성']
 st.bar_chart(data=gender_count, use_container_width=True)
-
-
-# In[ ]:
 
 
 st.subheader('연령분포')
@@ -242,9 +171,6 @@ else:
 st.pyplot(fig)
 
 
-# In[ ]:
-
-
 st.subheader('지역별분포')
 lat = lat.rename(columns={'지역':'거주지역'})
 map_lat = my_df[['거주지역']].merge(lat)
@@ -252,4 +178,79 @@ jit = np.random.randn(len(map_lat), 2)
 jit_ratio = 0.01
 map_lat[['lat','lon']] = map_lat[['lat','lon']] + jit*jit_ratio
 st.map(map_lat)
+
+if menu == "🖼️ 이미지 용량 줄이기":
+    # 압축률 선택
+
+    st.subheader("📉 압축률 선택")
+    col1, col2, col3, col4 = st.columns(4)
+
+    if "quality" not in st.session_state:
+        st.session_state.quality = 80
+
+    with col1:
+        if st.button("20%"):
+            st.session_state.quality = 20
+    with col2:
+        if st.button("40%"):
+            st.session_state.quality = 40
+    with col3:
+        if st.button("60%"):
+            st.session_state.quality = 60
+    with col4:
+        if st.button("80%"):
+            st.session_state.quality = 80
+
+    compression_quality = st.session_state.quality
+    st.caption(f"🔧 현재 선택된 압축률: {compression_quality}%")
+    st.caption("※ 숫자가 낮을수록 이미지 크기가 작아집니다 (화질도 함께 낮아짐)")
+
+    # 파일 업로드 (다중 허용)
+    st.subheader("📂 이미지 업로드")
+    uploaded_files = st.file_uploader(
+        "📂 이미지 파일을 드래그 앤 드롭 하세요 (PNG, JPG, JPEG)", 
+        type=["png", "jpg", "jpeg"],
+        accept_multiple_files=True,
+        key="uploader"
+    )
+
+    # 압축 처리
+    if uploaded_files:
+        compressed_files = []
+
+        for file in uploaded_files:
+            image = Image.open(file)
+            if image.mode in ("RGBA", "P"):
+                image = image.convert("RGB")
+
+            buffer = io.BytesIO()
+            image.save(buffer, format="JPEG", quality=compression_quality)
+            buffer.seek(0)
+            compressed_files.append((file.name, buffer))
+
+        st.success(f"{len(compressed_files)}개의 이미지가 {compression_quality}% 품질로 압축되었습니다.")
+
+        # 단일 파일이면 직접 다운로드
+        if len(compressed_files) == 1:
+            name, buf = compressed_files[0]
+            st.download_button(
+                label="📥 압축된 이미지 다운로드",
+                data=buf,
+                file_name=f"compressed_{name}",
+                mime="image/jpeg"
+            )
+        else:
+            # 여러 파일이면 ZIP 압축
+            zip_buffer = io.BytesIO()
+            with zipfile.ZipFile(zip_buffer, "w") as zip_file:
+                for name, buf in compressed_files:
+                    zip_file.writestr(f"compressed_{name}", buf.getvalue())
+            zip_buffer.seek(0)
+
+            st.download_button(
+                label="📦 ZIP으로 다운로드",
+                data=zip_buffer,
+                file_name="compressed_images.zip",
+                mime="application/zip"
+            )
 
