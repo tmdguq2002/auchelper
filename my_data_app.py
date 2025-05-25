@@ -185,24 +185,15 @@ if menu == "🖼️ 이미지 용량 줄이기":
     # 압축률 선택
 
     st.subheader("📉 압축률 선택")
-    col1, col2, col3, col4 = st.columns(4)
+    left, center, right = st.columns([1, 3, 1])
 
-    if "quality" not in st.session_state:
-        st.session_state.quality = 60
-
-    with col1:
-        if st.button("20%"):
-            st.session_state.quality = 20
-            use_container_width = 20
-    with col2:
-        if st.button("40%"):
-            st.session_state.quality = 40
-    with col3:
-        if st.button("60%"):
-            st.session_state.quality = 60
-    with col4:
-        if st.button("80%"):
-            st.session_state.quality = 80
+    with center:
+        compression_quality = st.radio(
+            label="",
+            options=[20, 40, 60, 80],
+            index=2,  # 기본 선택: 60%
+            horizontal=True
+        )
 
     compression_quality = st.session_state.quality
     st.caption(f"🔧 현재 선택된 압축률: {compression_quality}%")
