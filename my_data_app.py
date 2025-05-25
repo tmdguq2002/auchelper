@@ -39,12 +39,12 @@ with col2:
 st.sidebar.title("기능 선택")
 menu = st.sidebar.radio(
     "원하는 기능을 선택하세요",
-    ("📂 로바스 시각화", "🖼️ 이미지 용량 줄이기", "📈 Top5 분석", "👥 고객 분석")
+    ("📂 로바스 시각화(준비중)", "🖼️ 이미지 용량 줄이기", "🤖 안도미AI(준비중)", "👥 준비중")
 )
 
 my_df = df
 
-if menu == "📂 로바스 시각화":
+if menu == "📂 로바스 시각화(준비중)":
     st.sidebar.title("사이드 바 제목")
     st.sidebar.header("사이드 바 소제목")
     col1, col2 = st.sidebar.columns(2)
@@ -70,7 +70,7 @@ if menu == "📂 로바스 시각화":
 
 ##################메인##################
 
-if menu == "📂 로바스 시각화":
+if menu == "📂 로바스 시각화(준비중)":
     st.header("📂 로바스 자료 업로드")
     st.caption("★로바스에서 지출/어디어디/어디어디 엑셀로 자료를 다운받으신 후 업로드 해주세요")
     uploaded_file = st.file_uploader("엑셀 또는 CSV 파일 업로드", type=["xlsx", "xls", "csv"])
@@ -205,59 +205,59 @@ if menu == "🖼️ 이미지 용량 줄이기":
     # 선택된 버튼 강조해서 시각적으로 보여주기
     compression_quality = st.session_state.quality
     st.markdown(
-        f"<div style='text-align:center; font-weight:bold; font-size:18px;'>🔧 현재 선택된 압축률: <span style='color:#ff4b4b'>{selected}%</span></div>",
+        f"<div style='text-align:center; font-weight:bold; font-size:18px;'>🔧 현재 선택된 압축률: <span style='color:#ff4b4b'>{compression_quality}%</span></div>",
         unsafe_allow_html=True
     )
     st.caption("※ 숫자가 낮을수록 이미지 크기가 작아집니다 (화질도 함께 낮아짐)")
 
-# 업로드 상태를 세션에 저장
-if "uploaded_files" not in st.session_state:
-    st.session_state.uploaded_files = []
+    # 업로드 상태를 세션에 저장
+    if "uploaded_files" not in st.session_state:
+        st.session_state.uploaded_files = []
 
-# 파일 업로드
-new_files = st.file_uploader(
-    "📂 이미지를 드래그 앤 드롭 하세요 (PNG, JPG, JPEG)",
-    type=["png", "jpg", "jpeg"],
-    accept_multiple_files=True,
-    key="uploader"
-)
+    # 파일 업로드
+    new_files = st.file_uploader(
+        "📂 이미지를 드래그 앤 드롭 하세요 (PNG, JPG, JPEG)",
+        type=["png", "jpg", "jpeg"],
+        accept_multiple_files=True,
+        key="uploader"
+    )
 
-# 새 업로드 발생 시 기존 목록 초기화
-if new_files:
-    st.session_state.uploaded_files = new_files
+    # 새 업로드 발생 시 기존 목록 초기화
+    if new_files:
+        st.session_state.uploaded_files = new_files
 
-# 저장 및 다운로드 버튼
-if st.session_state.uploaded_files:
-    if st.button("💾 저장 및 다운로드"):
-        compressed_files = []
-        for file in st.session_state.uploaded_files:
-            image = Image.open(file)
-            if image.mode in ("RGBA", "P"):
-                image = image.convert("RGB")
-            buffer = io.BytesIO()
-            image.save(buffer, format="JPEG", quality=compression_quality)
-            buffer.seek(0)
-            compressed_files.append((file.name, buffer))
+    # 저장 및 다운로드 버튼
+    if st.session_state.uploaded_files:
+        if st.button("📉 이미지 용량 줄이기"):
+            compressed_files = []
+            for file in st.session_state.uploaded_files:
+                image = Image.open(file)
+                if image.mode in ("RGBA", "P"):
+                    image = image.convert("RGB")
+                buffer = io.BytesIO()
+                image.save(buffer, format="JPEG", quality=compression_quality)
+                buffer.seek(0)
+                compressed_files.append((file.name, buffer))
 
-        st.success(f"{len(compressed_files)}개의 이미지가 {compression_quality}% 품질로 압축되었습니다.")
+            st.success(f"{len(compressed_files)}개의 이미지가 {compression_quality}% 품질로 압축되었습니다.")
 
-        if len(compressed_files) == 1:
-            name, buf = compressed_files[0]
-            st.download_button(
-                label="📥 압축된 이미지 다운로드",
-                data=buf,
-                file_name=f"compressed_{name}",
-                mime="image/jpeg"
-            )
-        else:
-            zip_io = io.BytesIO()
-            with zipfile.ZipFile(zip_io, "w") as zf:
-                for name, buf in compressed_files:
-                    zf.writestr(f"compressed_{name}", buf.getvalue())
-            zip_io.seek(0)
-            st.download_button(
-                label="📦 ZIP으로 다운로드",
-                data=zip_io,
-                file_name="compressed_images.zip",
-                mime="application/zip"
-            )
+            if len(compressed_files) == 1:
+                name, buf = compressed_files[0]
+                st.download_button(
+                    label="📥 압축된 이미지 다운로드",
+                    data=buf,
+                    file_name=f"compressed_{name}",
+                    mime="image/jpeg"
+                )
+            else:
+                zip_io = io.BytesIO()
+                with zipfile.ZipFile(zip_io, "w") as zf:
+                    for name, buf in compressed_files:
+                        zf.writestr(f"compressed_{name}", buf.getvalue())
+                zip_io.seek(0)
+                st.download_button(
+                    label="📦 ZIP으로 다운로드",
+                    data=zip_io,
+                    file_name="compressed_images.zip",
+                    mime="application/zip"
+                )
