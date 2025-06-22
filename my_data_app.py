@@ -9,6 +9,8 @@ import io
 import zipfile
 import openai
 import os
+import fitz
+
 
 sns.set_theme(style='whitegrid', font_scale=1.5)
 sns.set_palette('Set2', n_colors=10)
@@ -265,34 +267,44 @@ if menu == "🖼️ 이미지 용량 줄이기":
                 )
 
 if menu == "🤖 안도미AI": 
-    # OpenAI API 키 설정 (안전한 방식으로 환경변수 또는 secrets 사용 권장)
-    openai.api_key = st.secrets["OPENAI_API_KEY"]  # 또는 os.getenv("OPENAI_API_KEY")
+    st.set_page_config(page_title="PDF 기반 GPT", page_icon="🤖")
+    st.title("📄 규정집 기반 GPT 응답")
 
-    # 시스템 프롬프트 (역할 정의)
-    system_prompt = """
-    너는 안양도시공사 규정집 전문가야. 사용자가 질문하면 규정에 맞는 요약, 설명 또는 안내를 제공해줘.
-    문서 기반의 답변을 하되 친절하고 간결하게 설명해.
-    """
+    # OpenAI API 키 (secrets.toml 사용 권장)
+    openai.api_key = st.secrets["OPENAI_API_KEY"]
 
-    st.title("🤖 안양도시공사 규정집 GPT")
-    st.caption("OpenAI API를 통해 나만의 GPT를 Streamlit 앱에 직접 구현")
+    # 시스템 역할 프롬프트
+    system_prompt = "너는 안양도시공사 규정집 전문가야. 사용자가 질문하면 해당 문서에서 관련 내용을 찾아 요약/설명해줘."
+
+    # 사전 지정된 PDF 파일 로드 및 텍스트 추출
+    @st.cache_data
+    def load_pdf_text():
+        with open("data/kj.pdf", "rb") as f:
+            text = ""
+            with fitz.open(stream=f.read(), filetype="pdf") as doc:
+                for page in doc:
+                    text += page.get_text()
+        return text
+
+    context = load_pdf_text()
 
     # 사용자 질문 입력
-    user_input = st.text_area("무엇이 궁금하신가요?", placeholder="예: 연차 휴가 규정이 어떻게 되나요?")
+    user_input = st.text_area("질문을 입력하세요", placeholder="예: 연차휴가 규정이 어떻게 되나요?")
 
-    # 응답 출력 영역
-    if st.button("GPT에게 물어보기") and user_input:
-        with st.spinner("GPT가 답변 중입니다..."):
+    # GPT 호출
+    if st.button("🤖 GPT에게 질문") and user_input:
+        with st.spinner("GPT가 응답 중입니다..."):
             try:
+                prompt = f"다음은 규정 문서입니다:\n{context[:3000]}\n\n사용자 질문: {user_input}"
                 response = openai.ChatCompletion.create(
-                    model="gpt-4",  # 필요시 gpt-3.5-turbo도 가능
+                    model="gpt-4",
                     messages=[
                         {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_input}
+                        {"role": "user", "content": prompt}
                     ]
                 )
                 answer = response["choices"][0]["message"]["content"]
-                st.success("답변 완료 ✅")
+                st.success("✅ 답변 완료")
                 st.markdown(answer)
             except Exception as e:
-                st.error(f"오류가 발생했습니다: {e}")
+                st.error(f"❌ 오류 발생: {e}")
