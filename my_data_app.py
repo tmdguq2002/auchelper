@@ -270,59 +270,59 @@ if menu == "🤖 안도미AI":
     # OpenAI API 클라이언트 초기화
     client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-# 시스템 역할 프롬프트
-system_prompt = "너는 안양도시공사 규정집 전문가야. 사용자가 질문하면 해당 문서에서 관련 내용을 찾아 요약/설명해줘."
+    # 시스템 역할 프롬프트
+    system_prompt = "너는 안양도시공사 규정집 전문가야. 사용자가 질문하면 해당 문서에서 관련 내용을 찾아 요약/설명해줘."
 
-# PDF에서 문단 단위로 텍스트 추출
-@st.cache_data
-def load_pdf_chunks():
-    with open("data/kj.pdf", "rb") as f:
-        doc = fitz.open(stream=f.read(), filetype="pdf")
-        all_text = ""
-        for page in doc:
-            all_text += page.get_text()
-        # 문단 단위로 분리 (두 개 이상의 줄바꿈 또는 마침표 기준)
-        chunks = re.split(r"\n{2,}|(?<=\.)\s+", all_text)
-        # 너무 짧은 문단 제거
-        chunks = [chunk.strip() for chunk in chunks if len(chunk.strip()) > 50]
-        return chunks
+    # PDF에서 문단 단위로 텍스트 추출
+    @st.cache_data
+    def load_pdf_chunks():
+        with open("data/kj.pdf", "rb") as f:
+            doc = fitz.open(stream=f.read(), filetype="pdf")
+            all_text = ""
+            for page in doc:
+                all_text += page.get_text()
+            # 문단 단위로 분리 (두 개 이상의 줄바꿈 또는 마침표 기준)
+            chunks = re.split(r"\n{2,}|(?<=\.)\s+", all_text)
+            # 너무 짧은 문단 제거
+            chunks = [chunk.strip() for chunk in chunks if len(chunk.strip()) > 50]
+            return chunks
 
-chunks = load_pdf_chunks()
+    chunks = load_pdf_chunks()
 
-# 유사 문단 검색 함수 (질문과 관련된 문단만 추출)
-def find_relevant_chunks(chunks, question, top_n=5):
-    keywords = set(re.findall(r"[\w가-힣]{2,}", question))
-    scores = []
-    for chunk in chunks:
-        chunk_words = set(re.findall(r"[\w가-힣]{2,}", chunk))
-        overlap = keywords & chunk_words
-        score = len(overlap)
-        scores.append((score, chunk))
-    scores.sort(reverse=True, key=lambda x: x[0])
-    return [chunk for _, chunk in scores[:top_n] if _ > 0]
+    # 유사 문단 검색 함수 (질문과 관련된 문단만 추출)
+    def find_relevant_chunks(chunks, question, top_n=5):
+        keywords = set(re.findall(r"[\w가-힣]{2,}", question))
+        scores = []
+        for chunk in chunks:
+            chunk_words = set(re.findall(r"[\w가-힣]{2,}", chunk))
+            overlap = keywords & chunk_words
+            score = len(overlap)
+            scores.append((score, chunk))
+        scores.sort(reverse=True, key=lambda x: x[0])
+        return [chunk for _, chunk in scores[:top_n] if _ > 0]
 
-# 사용자 질문 입력
-user_input = st.text_area("질문을 입력하세요", placeholder="예: 연차휴가 규정이 어떻게 되나요?")
+    # 사용자 질문 입력
+    user_input = st.text_area("질문을 입력하세요", placeholder="예: 연차휴가 규정이 어떻게 되나요?")
 
-# GPT 호출
-if st.button("🤖 GPT에게 질문") and user_input:
-    with st.spinner("GPT가 관련 내용을 찾고 있습니다..."):
-        relevant_chunks = find_relevant_chunks(chunks, user_input, top_n=5)
-        if not relevant_chunks:
-            st.warning("❗ 관련 문서를 찾을 수 없습니다. 더 구체적으로 질문해보세요.")
-        else:
-            context = "\n\n".join(relevant_chunks)
-            prompt = f"다음은 규정 문서 일부입니다:\n{context}\n\n사용자 질문: {user_input}"
-            try:
-                response = client.chat.completions.create(
-                    model="gpt-4",
-                    messages=[
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": prompt}
-                    ]
-                )
-                answer = response.choices[0].message.content
-                st.success("✅ GPT의 응답")
-                st.markdown(answer)
-            except Exception as e:
-                st.error(f"❌ 오류 발생: {e}")
+    # GPT 호출
+    if st.button("🤖 GPT에게 질문") and user_input:
+        with st.spinner("GPT가 관련 내용을 찾고 있습니다..."):
+            relevant_chunks = find_relevant_chunks(chunks, user_input, top_n=5)
+            if not relevant_chunks:
+                st.warning("❗ 관련 문서를 찾을 수 없습니다. 더 구체적으로 질문해보세요.")
+            else:
+                context = "\n\n".join(relevant_chunks)
+                prompt = f"다음은 규정 문서 일부입니다:\n{context}\n\n사용자 질문: {user_input}"
+                try:
+                    response = client.chat.completions.create(
+                        model="gpt-4",
+                        messages=[
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": prompt}
+                        ]
+                    )
+                    answer = response.choices[0].message.content
+                    st.success("✅ GPT의 응답")
+                    st.markdown(answer)
+                except Exception as e:
+                    st.error(f"❌ 오류 발생: {e}")
