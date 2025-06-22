@@ -4,6 +4,7 @@ numpy
 matplotlib
 seaborn
 openai
-pymupdf
 langchain>=0.1.15
+langchain-community
 faiss-cpu
+pymupdf
