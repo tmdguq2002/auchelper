@@ -5,3 +5,5 @@ matplotlib
 seaborn
 openai
 pymupdf
+langchain>=0.1.15
+faiss-cpu
