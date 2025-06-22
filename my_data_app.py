@@ -50,7 +50,8 @@ with col2:
 st.sidebar.title("기능 선택")
 menu = st.sidebar.radio(
     "원하는 기능을 선택하세요",
-    ("📂 로바스 시각화(준비중)", "🖼️ 이미지 용량 줄이기", "🧠 안도미AI", "👥 준비중")
+    ("🧠 안도미AI", "📂 로바스 시각화(준비중)", "🖼️ 이미지 용량 줄이기", "👥 준비중"),
+    index=1
 )
 
 my_df = df
@@ -315,7 +316,7 @@ if menu == "🧠 안도미AI":
     query = st.text_area("질문을 입력하세요", placeholder="예: 연차휴가 규정이 어떻게 되나요?")
 
     # 버튼 누르면 응답
-    if st.button("🤖 GPT에게 질문") and query:
+    if st.button("🧠 GPT에게 질문") and query:
         with st.spinner("GPT가 문서에서 내용을 찾는 중입니다..."):
             try:
                 result = qa_chain(query)
