@@ -279,23 +279,25 @@ if menu == "🧠 안도미AI":
     # OpenAI 키 설정
     os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
 
+    # 벡터 저장소 로딩 함수
     @st.cache_resource(show_spinner="🔄 문서 임베딩 중...")
     def load_vectorstore():
-        # PDF 파일 로드
-        loader = PyMuPDFLoader("data/kj.pdf")  # PDF 경로 수정 필요 시 이곳
+        loader = PyMuPDFLoader("data/kj.pdf")  # PDF 경로를 실제 위치에 맞게 수정
         docs = loader.load()
 
-        # 텍스트 나누기 (너무 긴 문단 방지)
+        # 텍스트 나누기
         splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
         split_docs = splitter.split_documents(docs)
 
-        # OpenAI Embedding 설정 (모델명 명시)
+        # 임베딩 생성
         embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
 
-        # FAISS 벡터 DB 생성
+        # FAISS 벡터스토어 생성
         vectorstore = FAISS.from_documents(split_docs, embeddings)
-
         return vectorstore
+
+    # 벡터스토어 불러오기
+    vectorstore = load_vectorstore()
 
     # LangChain QA 체인 구성
     llm = ChatOpenAI(model_name="gpt-4")
@@ -305,9 +307,10 @@ if menu == "🧠 안도미AI":
         return_source_documents=True
     )
 
-    # 사용자 입력 처리
+    # 사용자 질문 입력
     query = st.text_area("질문을 입력하세요", placeholder="예: 연차휴가 규정이 어떻게 되나요?")
 
+    # 버튼 누르면 응답
     if st.button("🤖 GPT에게 질문") and query:
         with st.spinner("GPT가 문서에서 내용을 찾는 중입니다..."):
             try:
@@ -315,7 +318,6 @@ if menu == "🧠 안도미AI":
                 st.success("✅ GPT의 응답")
                 st.markdown(result["result"])
 
-                # 출처 문서 표시
                 with st.expander("🔍 참고한 문서 보기"):
                     for i, doc in enumerate(result["source_documents"]):
                         st.markdown(f"**[문서 {i+1}]**\n{doc.page_content}")
