@@ -267,7 +267,6 @@ if menu == "🖼️ 이미지 용량 줄이기":
                 )
 
 if menu == "🤖 안도미AI": 
-    st.set_page_config(page_title="PDF 기반 GPT", page_icon="🤖")
     st.title("📄 규정집 기반 GPT 응답")
 
     # OpenAI API 키 (secrets.toml 사용 권장)
