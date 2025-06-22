@@ -279,18 +279,23 @@ if menu == "🧠 안도미AI":
     # OpenAI 키 설정
     os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
 
-    # PDF 문서 로딩 및 벡터스토어 구축 (캐시 활용)
     @st.cache_resource(show_spinner="🔄 문서 임베딩 중...")
     def load_vectorstore():
-        loader = PyMuPDFLoader("data/kj.pdf")
+        # PDF 파일 로드
+        loader = PyMuPDFLoader("data/kj.pdf")  # PDF 경로 수정 필요 시 이곳
         docs = loader.load()
-        splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=100)
-        split_docs = splitter.split_documents(docs)
-        embeddings = OpenAIEmbeddings()
-        vectorstore = FAISS.from_documents(split_docs, embeddings)
-        return vectorstore
 
-    vectorstore = load_vectorstore()
+        # 텍스트 나누기 (너무 긴 문단 방지)
+        splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+        split_docs = splitter.split_documents(docs)
+
+        # OpenAI Embedding 설정 (모델명 명시)
+        embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+
+        # FAISS 벡터 DB 생성
+        vectorstore = FAISS.from_documents(split_docs, embeddings)
+
+        return vectorstore
 
     # LangChain QA 체인 구성
     llm = ChatOpenAI(model_name="gpt-4")
