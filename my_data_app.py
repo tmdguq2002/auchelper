@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import io
 import zipfile
+import openai
+import os
 
 sns.set_theme(style='whitegrid', font_scale=1.5)
 sns.set_palette('Set2', n_colors=10)
@@ -39,7 +41,7 @@ with col2:
 st.sidebar.title("기능 선택")
 menu = st.sidebar.radio(
     "원하는 기능을 선택하세요",
-    ("📂 로바스 시각화(준비중)", "🖼️ 이미지 용량 줄이기", "🤖 안도미AI(준비중)", "👥 준비중")
+    ("📂 로바스 시각화(준비중)", "🖼️ 이미지 용량 줄이기", "🤖 안도미AI", "👥 준비중")
 )
 
 my_df = df
@@ -261,3 +263,36 @@ if menu == "🖼️ 이미지 용량 줄이기":
                     file_name="compressed_images.zip",
                     mime="application/zip"
                 )
+
+if menu == "🤖 안도미AI": 
+    # OpenAI API 키 설정 (안전한 방식으로 환경변수 또는 secrets 사용 권장)
+    openai.api_key = st.secrets["OPENAI_API_KEY"]  # 또는 os.getenv("OPENAI_API_KEY")
+
+    # 시스템 프롬프트 (역할 정의)
+    system_prompt = """
+    너는 안양도시공사 규정집 전문가야. 사용자가 질문하면 규정에 맞는 요약, 설명 또는 안내를 제공해줘.
+    문서 기반의 답변을 하되 친절하고 간결하게 설명해.
+    """
+
+    st.title("🤖 안양도시공사 규정집 GPT")
+    st.caption("OpenAI API를 통해 나만의 GPT를 Streamlit 앱에 직접 구현")
+
+    # 사용자 질문 입력
+    user_input = st.text_area("무엇이 궁금하신가요?", placeholder="예: 연차 휴가 규정이 어떻게 되나요?")
+
+    # 응답 출력 영역
+    if st.button("GPT에게 물어보기") and user_input:
+        with st.spinner("GPT가 답변 중입니다..."):
+            try:
+                response = openai.ChatCompletion.create(
+                    model="gpt-4",  # 필요시 gpt-3.5-turbo도 가능
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_input}
+                    ]
+                )
+                answer = response["choices"][0]["message"]["content"]
+                st.success("답변 완료 ✅")
+                st.markdown(answer)
+            except Exception as e:
+                st.error(f"오류가 발생했습니다: {e}")
