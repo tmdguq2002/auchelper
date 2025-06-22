@@ -33,7 +33,8 @@ lat = pd.read_csv('data/lat.csv', encoding='euc-kr')
 df['구매일자'] = pd.to_datetime(df['구매일자'])
 
 st.set_page_config(page_title='auchelper', 
-                   page_icon='🐔', layout='wide')
+                   page_icon='🐔', layout='wide',
+                   initial_sidebar_state="expanded")
 
 col1, col2 = st.columns([1, 4])
 with col1:
