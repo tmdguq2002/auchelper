@@ -3,7 +3,7 @@ pandas
 numpy
 matplotlib
 seaborn
-openai
+openai>=1.0.0
 langchain>=0.1.15
 langchain-community
 faiss-cpu
