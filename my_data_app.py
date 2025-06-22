@@ -7,14 +7,13 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import io
 import zipfile
-import openai
+from openai import OpenAI
 import os
 import fitz
 
 
 sns.set_theme(style='whitegrid', font_scale=1.5)
 sns.set_palette('Set2', n_colors=10)
-plt.rc('font', family='AppleGothic')
 plt.rc('axes', unicode_minus=False)
 
 import streamlit as st
@@ -267,10 +266,8 @@ if menu == "🖼️ 이미지 용량 줄이기":
                 )
 
 if menu == "🤖 안도미AI": 
-    st.title("📄 규정집 기반 GPT 응답")
-
-    # OpenAI API 키 (secrets.toml 사용 권장)
-    openai.api_key = st.secrets["OPENAI_API_KEY"]
+    # OpenAI API 클라이언트 초기화
+    client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
     # 시스템 역할 프롬프트
     system_prompt = "너는 안양도시공사 규정집 전문가야. 사용자가 질문하면 해당 문서에서 관련 내용을 찾아 요약/설명해줘."
@@ -295,14 +292,14 @@ if menu == "🤖 안도미AI":
         with st.spinner("GPT가 응답 중입니다..."):
             try:
                 prompt = f"다음은 규정 문서입니다:\n{context[:3000]}\n\n사용자 질문: {user_input}"
-                response = openai.ChatCompletion.create(
+                response = client.chat.completions.create(
                     model="gpt-4",
                     messages=[
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": prompt}
                     ]
                 )
-                answer = response["choices"][0]["message"]["content"]
+                answer = response.choices[0].message.content
                 st.success("✅ 답변 완료")
                 st.markdown(answer)
             except Exception as e:
