@@ -43,7 +43,7 @@ with col2:
 st.sidebar.title("기능 선택")
 menu = st.sidebar.radio(
     "원하는 기능을 선택하세요",
-    ("📂 로바스 시각화(준비중)", "🖼️ 이미지 용량 줄이기", "🤖 안도미AI", "👥 준비중")
+    ("📂 로바스 시각화(준비중)", "🖼️ 이미지 용량 줄이기", "👾 안도미AI", "👥 준비중")
 )
 
 my_df = df
@@ -266,7 +266,7 @@ if menu == "🖼️ 이미지 용량 줄이기":
                     mime="application/zip"
                 )
 
-if menu == "🤖 안도미AI": 
+if menu == "👾 안도미AI": 
     # OpenAI API 클라이언트 초기화
     client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
