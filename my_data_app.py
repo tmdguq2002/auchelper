@@ -282,19 +282,23 @@ if menu == "🧠 안도미AI":
     # 벡터 저장소 로딩 함수
     @st.cache_resource(show_spinner="🔄 문서 임베딩 중...")
     def load_vectorstore():
-        loader = PyMuPDFLoader("data/kj.pdf")  # PDF 경로를 실제 위치에 맞게 수정
+        loader = PyMuPDFLoader("data/kj.pdf")
         docs = loader.load()
 
-        # 텍스트 나누기
-        splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+        splitter = RecursiveCharacterTextSplitter(chunk_size=300, chunk_overlap=20)
         split_docs = splitter.split_documents(docs)
 
-        # 임베딩 생성
+        # 빈 문서 필터링
+        split_docs = [doc for doc in split_docs if doc.page_content.strip()]
+
+        print(f"[DEBUG] 문단 개수: {len(split_docs)}")
+        print(f"[DEBUG] 예시 문단: {split_docs[0].page_content[:100]}")
+
         embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
 
-        # FAISS 벡터스토어 생성
         vectorstore = FAISS.from_documents(split_docs, embeddings)
         return vectorstore
+
 
     # 벡터스토어 불러오기
     vectorstore = load_vectorstore()
